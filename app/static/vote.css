@@ -1,0 +1,387 @@
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;   
+}
+
+img{
+    width: 310px;
+    height: 290px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.welcome {
+    background-color: rgb(49, 46, 46);
+    color: white;
+    font-size: 24px;
+    width: 100%;
+    height: 50px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    padding: 10px; 
+}
+
+.welcome p {
+    align-self: flex-end;
+    margin: 0; 
+    text-align: center;
+}
+
+
+.logout-link {
+    margin-left: auto;
+}
+
+.form-div {
+    display: flex;
+    flex-direction: column;
+    width:100%;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+
+}
+
+.candidate-row input {
+    display: none;
+}
+
+.candidate-row label {
+    cursor: pointer;
+    padding: 5px;
+    border: none;
+    width: 100%;
+    height: 320px;
+    transition: background-color 0.3s;
+}
+
+.candidate-row input:checked + label {
+    border: 8px solid green;
+}
+
+
+th, td {
+    text-align: center;
+    width: 300px;
+}
+
+/* Set explicit widths for columns */
+form th:first-child, td:first-child {
+    width: 60%; /* Adjust as needed */
+}
+
+form th:last-child, td:last-child {
+    width: 40%; /* Adjust as needed */
+}
+
+tbody {
+    align-items: center;
+}
+
+.label-container {
+    text-align: center;
+}
+
+.center-middle {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.candidate-name {
+    display: inline-block;
+}
+
+.center-image {
+    max-width: 100px;
+    max-height: 100px;
+    display: block;
+    margin: 0 auto;
+}
+
+.form-table {
+    width: 600px;
+    margin: auto; 
+    border-collapse: collapse;
+    margin-bottom: 50px;
+}
+
+.submit-container {
+    display: flex;
+    justify-content: center;
+    margin-top: -30px;
+    margin-bottom: 60px;
+}
+
+.under-construction{
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 350px;
+}
+
+.report-table tbody tr td.cell-width-1 {
+    width: 12%; 
+}
+
+.report-table tbody tr td.cell-width-2 {
+    width: 20%; 
+}
+
+.report-table tbody tr td.cell-width-3 {
+    width: 10%;  
+}
+
+
+.report-table img {
+    width: 120px;
+    height: 80px;
+    padding: 0px;
+    margin: 0px;
+}
+
+.report-table{
+    width: 40%;
+    margin: 0px auto;
+    text-align: center;
+    margin-bottom: 5px;
+    margin-top: 100px;
+}
+
+.record-font{
+    font-size: 30px;
+}
+
+
+@media only screen and (max-width: 768px) {
+    .candidate-row label {
+        cursor: pointer;
+        border: none;
+        width: 100%;
+        height: 30%;
+    }
+
+    img{
+        width: 159px;
+        height: 130px;
+    }
+    
+    .form-table {
+        width: 100%;
+        margin: auto; 
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+
+    .under-construction{
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 14px;
+    }
+
+    th, td {
+        text-align: center;
+        width: 200px;
+    }
+
+    .welcome {
+        background-color: rgb(49, 46, 46);
+        color: white;
+        font-size: 11px;
+        width: 100%;
+        height: 50px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        text-align: center;
+    }
+    
+    .welcome p {
+        align-self: flex-end;
+        margin: 0; 
+        text-align: center;
+    }
+    
+    .candidate-row input:checked + label {
+        border: 4px solid green;
+    }
+
+    .submit-container {
+        display: flex;
+        justify-content: center;
+        margin-top: -5px;
+        margin-bottom: 100px;
+    }
+    
+    .report-table img {
+        width: 120px;
+        height: 90px;
+        padding: 0px;
+        margin: 0px;
+    }
+    
+    .report-table{
+        width: 100%;
+        margin: 0px auto;
+        text-align: center;
+        font-size: 12px;
+        margin-bottom: 5px;
+        margin-top: 30px;
+    }
+    
+    .record-font{
+        
+        font-size: 20px;
+    }
+    
+    .report-table tbody tr td.cell-width-1 {
+        width: 10%; 
+    }
+    
+    .report-table tbody tr td.cell-width-2 {
+        width: 50%; 
+    }
+    
+    .report-table tbody tr td.cell-width-3 {
+        width: 40%;  
+    }
+    
+}
+
+
+@media only screen and (min-width: 601px) {
+    .form-table {
+        width: 90%;
+        margin: auto; 
+        border-collapse: collapse;
+        margin-bottom: 50px;
+    }
+
+    img{
+        width: 250px;
+        height: 190px;
+    }
+
+    .candidate-row label {
+        cursor: pointer;
+        border: none;
+        width: 90%;
+        height: 20%;
+    }
+    .under-construction{
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 60px;
+        font-size: 14px;
+    }
+    .report-table img {
+        width: 200px;
+        height: 100px;
+        padding: 0px;
+        margin: 0px;
+    }
+    
+    .welcome {
+
+        font-size: 20px;
+        width: 100%;
+        height: 40px;
+        position: fixed;
+        bottom: 0px;
+        left: 5;
+        text-align: center;
+    }
+    
+    .report-table{
+        width: 100%;
+        margin: 0px auto;
+        text-align: center;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    
+    .record-font{
+        margin-top: 20px;
+        font-size: 25px;
+    }
+    
+    
+    .report-table tbody tr td.cell-width-1 {
+        width: 40%; 
+    }
+    
+    .report-table tbody tr td.cell-width-2 {
+        width: 35%; 
+    }
+    
+    .report-table tbody tr td.cell-width-3 {
+        width: 25%;  
+    }
+    
+}
+
+@media only screen and (min-width: 992px) {
+    .form-table {
+        width: 60%;
+        margin: auto; 
+        border-collapse: collapse;
+        margin-bottom: 50px;
+    }
+    img{
+        width: 300px;
+        height: 250px;
+    }
+
+    .candidate-row label {
+        cursor: pointer;
+        border: none;
+        width: 90%;
+        height: 20%;
+    }
+    .welcome {
+
+        font-size: 30px;
+        width: 100%;
+        height: 60px;
+        position: fixed;
+        bottom: 0px;
+        left: 5;
+        text-align: center;
+    }
+    
+    .under-construction{
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 100px;
+        font-size: 20px;
+    }
+
+    .report-table img {
+        width: 200px;
+        height: 110px;
+        padding: 0px;
+        margin: 0px;
+    }
+    
+    .report-table{
+        width: 40%;
+        margin: 0px auto;
+        text-align: center;
+        font-size: 16px;
+        margin-bottom: 5px;
+        margin-top: 20px;
+    }
+    
+    .record-font{
+        font-size: 30px;
+    }
+    
+}

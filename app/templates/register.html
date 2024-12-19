@@ -1,0 +1,58 @@
+{% extends 'sign_layout.html' %}
+
+{% block static %}
+<title>Register</title>
+<link href="https://fonts.cdnfonts.com/css/sregs-serif-display?styles=137485" rel="stylesheet">                     
+<link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
+{% endblock%}
+{% block content %}
+<div class="register-container shadow-lg p-3 mb-5 bg-body rounded">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+        {% if category == "success" %}
+            <div class="alert alert-{{ category }}">
+            <p3 class="text-success">{{ message }}</p3>
+            </div>
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <h2 class="mb-3 mt-3">Register</h2>
+    <form action="/register" method="post">
+      <div class="form-floating mb-3 mt-3">
+        <input type="text" class="form-control" id="first_name" placeholder="First Name" name="first_name" required>
+        <label for="email">First Name</label>
+      </div>
+      <div class="form-floating mb-3 mt-3">
+        <input type="text" class="form-control" id="last_name" placeholder="Last Name" name="last_name" required>
+        <label for="email">Last Name</label>
+      </div>
+      <div class="form-floating mb-3 mt-3">
+        <input type="email" class="form-control" id="email" placeholder="Email" name="email" required>
+        <label for="email">Email</label>
+      </div>
+      <div class="form-floating mb-3 mt-3">
+        <input type="text" class="form-control" id="contact" placeholder="Contact" name="contact" required>
+        <label for="email">Contact</label>
+      </div>
+      <div class="form-floating mb-3 mt-3">
+        <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
+        <label for="email">Password</label>
+      </div>
+      <button type="submit" class="btn btn-lg btn-outline-success">Submit</button>
+    </form>
+    <p>Already have an account?<a href="/login"> Login</a></p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+            {% if category == "info" %}
+                <div class="alert alert-{{ category }}">
+                <p3 class="text-danger">{{ message }}</p3>
+                </div>
+                {% endif %}
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+{% endblock %}
