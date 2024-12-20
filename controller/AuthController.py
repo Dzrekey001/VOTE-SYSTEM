@@ -15,6 +15,7 @@ class AuthController:
         password = request.form["password"]
         token = request.args.get("token")
         
+        
         if not email or not password or not token:
             return None  # Missing data
         

@@ -1,65 +1,88 @@
-from flask import Flask,render_template, redirect, request, url_for, flash, make_response
+from flask import Flask,render_template, redirect, request, url_for, flash
 from werkzeug.security import generate_password_hash
 from models.sms_email import Send
 from models import db
-from controller.AuthController import AuthController
-from models import session
-
+from controller import AuthController
 
 candidate_group = db.get_candidates()
 
 app = Flask(__name__)
-app.secret_key = '1223fdferrewredf'
+app.secret_key = "f8fd933c-af3b-4e77-b6b9-cdb5f2dd42d3"
+
 
 @app.route("/login/", methods=["GET", "POST"])
 def login():  
-    if request.method == "GET":
-        response = make_response(render_template("login.html"))
-        response.set_cookie('session_id', '', expires=0)
-        return response
+    if request.method == "GET": 
+        token = request.args.get("token")
+        voter = AuthController.get_cached_voter(token)
+        if voter:
+            AuthController.remove_cached_voter(token)
+        return render_template("login.html")
     
-    if request.method == "POST":
-        response = AuthController.user_authenticated(request)
-        if response:
-            return response
+    if request.method == "POST": 
+        user_authenticed = AuthController.user_authenticated(request)
+
+        if user_authenticed:
+            return user_authenticed
         else:
             flash('Login failed. Check credentials or use your unique link.', 'info')
-            return redirect(url_for("login", token=request.args.get("token")))      
-    
-
+            token = request.args.get("token")
+            return redirect(url_for("login", token=token))   
+        
+        
 @app.route("/votes", methods=["GET", "POST"])
 def votes():
-    cached_voter=AuthController.get_cached_voter(request.args.get("token"))
-    if cached_voter and cached_voter.get('session_id') == request.cookies.get('session_id'):
-        return redirect(url_for("vote_route", token=request.args.get("token")))
+    token = request.args.get("token")
+    voter = AuthController.get_cached_voter(token)
+    session_id = request.cookies.get("session_id")
+    
+    if not voter:
+            return redirect(url_for("login", token=token))
+        
+    if session_id == voter.get("session_id"):
+        return redirect(url_for("vote_route", token=token))
     else:
-        return redirect(url_for("login", token=request.args.get("token")))
+        return redirect(url_for("login", token=token))
 
 
 @app.route("/vote", methods=["GET"])
 def vote_route():
-    token = request.args.get("token")
-    user_session_id = request.cookies.get('session_id')
-    voter = AuthController.get_cached_voter(token)
-    
-    
-    if not voter or voter.get('session_id') != user_session_id:
+    if request.method == "GET":
+        token = request.args.get("token")
+        session_id = request.cookies.get("session_id")
+        voter = AuthController.get_cached_voter(token)
+        if not voter:
+            return redirect(url_for("login", token=token))
+        
+        confirmationNumber = voter.get('voteConfirmationNumber')
+        if voter.get('session_id') == session_id and confirmationNumber == "NULL": 
+            return render_template("vote.html", voter=voter,
+                                candidate_group=candidate_group, token=token)
+        elif voter.get('session_id') == session_id and confirmationNumber != "NULL":
+            return redirect(url_for("report", token=token))
+        
         return redirect(url_for("login", token=token))
-    
-    confirmationNumber = voter.get('voteConfirmationNumber')
-    if confirmationNumber == "NULL":
-        return render_template("vote.html", voter=voter, candidate_group=candidate_group, token=token)
-    return redirect(url_for("report", token=token))
+    else:
+        return redirect(url_for("login", token=token))
 
 
 @app.route("/report")
 def report():
-    token=request.args.get("token")
+    token = request.args.get("token")
+    session_id = request.cookies.get("session_id")
     voter = AuthController.get_cached_voter(token)
-    if voter.get('voteConfirmationNumber') != "NULL":
-        vote_casted = db.get_voted_for(voter.get("id"))
-        return render_template("report.html", votes=vote_casted, voteConfirmationNumber=voter.get('voteConfirmationNumber') )
+    if not voter:
+            return redirect(url_for("login", token=token))
+        
+    confirmationNumber = voter.get('voteConfirmationNumber')
+    print(voter)
+    
+    if voter.get('session_id') == session_id and confirmationNumber != 'NULL':
+        vote_casted = db.get_voted_for(voter.get('id'))
+        return render_template("report.html", votes=vote_casted, voteConfirmationNumber=confirmationNumber, token=token )
+  
     return redirect(url_for("login", token=token))
+
 
 @app.route("/recordvote", methods=["POST"])
 def recordvote():
@@ -67,39 +90,41 @@ def recordvote():
     session_id = request.cookies.get("session_id")
     voter = AuthController.get_cached_voter(token)
     
-    if not voter or session_id != voter.get('session_id'):
+    if not voter:
         return redirect(url_for("login", token=token))
-    
-    if voter.get('voteConfirmationNumber') == 'NULL':
+        
+    confirmationNumber = voter.get('voteConfirmationNumber')
+  
+    if voter.get('session_id') == session_id and confirmationNumber == "NULL":
         voter_choice = request.form
         voteConfirmationNumber = str(db.vote_count() + 20000)
-        
         for candidateId in voter_choice:
             portId = db.get_portfolioId(candidateId=candidateId)
             db.cast_vote(voter_id=voter.get('id'), candidate_id=candidateId, 
                          portfolio_id=portId, 
                          voteConfirmationNumber=voteConfirmationNumber)
-        
-        voter['voteConfirmationNumber'] = voteConfirmationNumber
-        session.cache_voter(voter.get('token'), voter)
+        return redirect(url_for("report", token=token))
     
-    return redirect(url_for("report", token=voter.get('token')))
+    return redirect(url_for("login", token=token))
 
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
     if request.method == "POST":
         token = request.args.get("token")
         session_id = request.cookies.get("session_id")
+        
         voter = AuthController.get_cached_voter(token)
-        if not voter or session_id != voter.get('session_id'):
-            flash('Something Happened.Try logging in.', 'error')
+        
+        if not voter:
             return redirect(url_for("login", token=token))
-    
-        session.remove(f'user<{token}>')
-        flash('You have been logged out successfully.', 'success')
+        
+        if voter.get('session_id') == session_id and voter.get('token') == token:  
+            flash('You have been logged out successfully.', 'success')
+            return redirect(url_for("login", token=token))
         return redirect(url_for("login", token=token))
-    return render_template("login.html", token=token)
-
+    return render_template("login.html", token)
+   
+    
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -117,8 +142,8 @@ def register():
                                           pwdhash=passwd,
                                           contact=contact)           
             flash('Succesfully Register! Go to login', 'success')
-            send = Send(token=new_voter.token, first_name=new_voter.first_name)
-            send.send_email(voter_email_address=new_voter.email)
+            #send = Send(token=new_voter.token, first_name=new_voter.first_name)
+            #send.send_email(voter_email_address=new_voter.email)
             #send.send_sms(contact=new_voter.contact)
             return redirect(url_for('register'))
         flash('Registration failed. User Already Exist!', 'info')
@@ -129,11 +154,16 @@ def register():
 @app.route("/statistics")
 def statistic():
     token = request.args.get("token")
+    session_id = request.cookies.get("session_id")
     candidate_data = db.get_vote_percentage_by_portfolio()
-    if candidate_data:
-        return make_response(render_template("statistics.html", candidate_data=candidate_data, token=token))
-    return redirect(url_for("login", token=token))
-
+    
+    voter = AuthController.get_cached_voter(token)
+    if not voter:
+            return redirect(url_for("login", token=token))
+    
+    if candidate_data and voter.get('session_id') == session_id and voter.get('token') == token:
+        return render_template("statistics.html", candidate_data=candidate_data, token=token)
+    return render_template("login.html", token=token)
      
 
 
