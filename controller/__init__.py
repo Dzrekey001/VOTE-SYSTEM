@@ -1,0 +1,3 @@
+from controller.AuthController import AuthController
+
+AuthController.load_all_voter_to_cache()

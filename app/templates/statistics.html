@@ -1,0 +1,67 @@
+{% extends 'layout.html' %}
+
+{% block static %}
+<title>Vote Statistics</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='statistics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="flex-container">
+  <div class="statistic-table"> 
+    {% for portfolio_name, candidates_dict in candidate_data.items() %}
+    <table class="table table-borderless text-center">
+        <thead>
+            <tr>
+                <th>{{ portfolio_name }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <table class="child-table table table-bordered">
+                        <thead class="border">
+                            <tr>
+                                <th class="border border-info">Name</th>
+                                <th class="border border-info"></th>
+                                <th class="border border-info">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidate_name, vote_info in candidates_dict.items() %}
+                            {% if vote_info is mapping %}
+                                {% set percentage = vote_info.get('percentage', 0) %}
+                                {% set total_votes = vote_info.get('total_votes', 0) %}
+                            {% else %}
+                                {% set percentage = 0 %}
+                                {% set total_votes = vote_info %}
+                            {% endif %}                     
+                            <tr>
+                                {% if candidate_name != "Portfolio Total" %}
+                                <td class="border border-info">{{ candidate_name }}</td>
+                                <td class="border border-info">
+                                    <div class="progress">
+                                        <div class="progress-bar" style="width: {{ percentage }}%;">{{ percentage }}</div>
+                                    </div>
+                                </td>
+                                <td class="border border-info">{{ total_votes }}</td>
+                                {% else %}
+                                <td class="border border-info">&nbsp;</td>
+                                <td class="border border-info">
+                                    <div>
+                                        <div> {{ candidate_name }}</div>
+                                    </div>
+                                </td>
+                                <td class="border border-info">{{ total_votes }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}                      
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{% endfor %} 
+  </div>
+</div>
+{% endblock %}
