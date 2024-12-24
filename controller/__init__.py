@@ -1,3 +1,6 @@
 from controller.AuthController import AuthController
-
-AuthController.load_all_voter_to_cache()
+from controller.VoteController import VoteController
+from controller.RecordVoteController import RecordVoteController
+from controller.RegisterController import RegisterController
+from controller.StatsController import StatsController
+from controller.ReportController import ReportController
