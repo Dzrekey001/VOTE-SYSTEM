@@ -8,6 +8,17 @@ class RegisterController:
     
     @classmethod
     def register(cls, request):
+        """
+        Registers a new voter by processing the registration form data.
+
+        Parameters:
+        - cls: The class containing this method, used to access class-level methods.
+        - request (Flask request object): The HTTP request object containing the form data
+        for the registration, including first name, last name, email, contact, and password.
+
+        Returns:
+        - Flask Response: A redirect response to the registration page with a success or error message.
+        """
         first_name = request.form["first_name"]
         last_name = request.form["last_name"]
         email = request.form["email"]
