@@ -45,16 +45,30 @@ class DBStorage():
         self.__session.commit()
 
     def get_voter(self, email, token):
+        """
+        Retrieves a voter from the database using their email and token.
+
+        Parameters:
+        - email (str): The email address of the voter.
+        - token (str): The token associated with the voter.
+
+        Returns:
+        - Voter object if a matching voter is found, otherwise False.
+        """
         voter = self.__session.query(Voter).filter((Voter.email == email) & (Voter.token == token)).first()
         if voter:
             return voter
         return False
-    
-    def get_all_voters(self):
-        return self.__session.query(Voter).all()
-       
+      
 
     def get_candidates(self):
+        """
+        Retrieves and groups candidates by their associated portfolio.
+        
+        Returns:
+        - dict: A dictionary where the keys are portfolio names, and the values are lists of 
+                candidates.
+        """
         candidates_grouped = (
             self.__session.query(Candidate)
             .order_by(asc(Candidate.portfolio_id), desc(Candidate.candidateId))
@@ -73,20 +87,58 @@ class DBStorage():
 
 
     def get_portfolioId(self, candidateId):
+        """
+        Retrieves the portfolio_id of a candidate based on their candidateId.
+        
+        Parameters:
+        - candidateId (int): The ID of the candidate.
+
+        Returns:
+        - int: The portfolio_id associated with the candidate.
+        """
         portId = self.__session.query(Candidate).filter(Candidate.candidateId == candidateId).first().portfolio_id
         return portId
     
+    
     def vote_count(self):
+        """
+        Returns the total number of votes in the database.
+     
+        Returns:
+        - int: The total number of votes in the database.
+        """
         return self.__session.query(Vote).count()
     
+    
     def get_confirmationNumber(self, voterId):
+        """
+        Retrieves the vote confirmation number for a specific voter.
+        
+        Parameters:
+        - voterId (int): The ID of the voter whose confirmation number is being retrieved.
+        
+        Returns:
+        - str: The vote confirmation number if found, or None if no vote is cast.
+        """
         number = self.__session.query(Vote).filter(Vote.voter_Id == voterId).first()
         if number:
             return number.voteConfirmationNumber
         else:
             return None
 
+
     def get_voted_for(self, voter_id):
+        """
+        Retrieves the list of votes cast by a specific voter, along with the candidates they voted for.
+        
+        The result is ordered by the candidate's portfolio_id.
+        
+        Parameters:
+        - voter_id (int): The ID of the voter whose votes are being retrieved.
+        
+        Returns:
+        - List[Vote]: A list of Vote objects, each containing the related Candidate.
+        """
         voted_for = self.__session.query(Vote).join(Candidate).\
             options(joinedload(Vote.candidate)).\
             filter(Vote.voter_Id == voter_id).\
@@ -172,7 +224,21 @@ class DBStorage():
         return None
     
     def check_existance(self, contact, email, type):
-        # check if user exists in the database
+        """
+        Checks if a user exists in the database based on the provided contact or email.
+
+        Args:
+            contact (str): The contact number (e.g., phone number) of the user to check.
+            email (str): The email address of the user to check.
+            type (str): The type of user to check for in the database. Must be either "Voter" or "Candidate".
+
+        Returns:
+            bool: `True` if a user with the provided contact or email exists in the specified type (Voter or Candidate) table, 
+                `False` otherwise.
+
+        Raises:
+            TypeError: If the provided `type` is not "Voter" or "Candidate".
+        """
         classes = {"Voter": Voter, "Candidate": Candidate}
         if type not in classes.keys():
             raise TypeError(f"Type: '{type}' does not exist")
@@ -185,6 +251,31 @@ class DBStorage():
             return False           
     
     def get_vote_percentage_by_portfolio(self):
+        """
+        Retrieves the vote percentage for each candidate in each portfolio and returns the data 
+        in an ordered dictionary. The function calculates the total votes and percentage of votes 
+        each candidate has received within their respective portfolios.
+
+        The result is an ordered dictionary with the following structure:
+        {
+            portfolio_name: {
+                candidate_name: {
+                    'total_votes': total_votes_count,
+                    'percentage': vote_percentage
+                },
+                'Portfolio Total': {
+                    'total_votes': total_votes_count
+                }
+            }
+        }
+
+        If an error occurs during the process, an empty ordered dictionary is returned.
+
+        Returns:
+            OrderedDict: An ordered dictionary containing the vote statistics for each portfolio 
+                        and its candidates. Each portfolio contains the candidate's vote count 
+                        and percentage, along with the total votes for the portfolio.
+        """
         try:
             # Create a mapping between portfolio_id and portfolio_name
             portfolio_mapping = dict(
@@ -242,9 +333,3 @@ class DBStorage():
             return OrderedDict()
 
         return result_dict
-
-
-Db = DBStorage()
-Db.reload()
-
-Db.get_all_voters()
