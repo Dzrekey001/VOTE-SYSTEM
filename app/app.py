@@ -1,8 +1,11 @@
 from flask import Flask,render_template, redirect, request, url_for, flash
-from werkzeug.security import generate_password_hash
-from models.sms_email import Send
 from models import db
 from controller import AuthController
+from controller import VoteController
+from controller import RecordVoteController
+from controller import RegisterController
+from controller import StatsController
+from controller import ReportController
 
 candidate_group = db.get_candidates()
 
@@ -11,7 +14,26 @@ app.secret_key = "f8fd933c-af3b-4e77-b6b9-cdb5f2dd42d3"
 
 
 @app.route("/login/", methods=["GET", "POST"])
-def login():  
+def login():
+    """
+    Handles the login process for GET and POST requests.
+
+    GET: 
+        - Retrieves a token from the query parameters.
+        - Attempts to fetch a cached voter associated with the token.
+        - If a voter is found, removes the cached voter.
+        - Renders the login page.
+
+    POST: 
+        - Authenticates the user using the provided credentials.
+        - If authentication is successful, returns the authenticated user's response.
+        - If authentication fails, flashes an error message and redirects to the login page, 
+          preserving the token in the query parameters.
+
+    Returns:
+        - For GET requests: Renders the login.html template.
+        - For POST requests: Redirects to the login page on failure or returns the authenticated user on success.
+    """
     if request.method == "GET": 
         token = request.args.get("token")
         voter = AuthController.get_cached_voter(token)
@@ -32,6 +54,22 @@ def login():
         
 @app.route("/votes", methods=["GET", "POST"])
 def votes():
+    """
+    Handles the routing logic for accessing the voting page.
+
+    This function performs the following steps:
+    1. Retrieves the token from the query parameters.
+    2. Fetches the cached voter associated with the token.
+    3. Retrieves the session ID from the user's cookies.
+    4. Validates the voter and session ID:
+       - If no voter is found, redirects to the login page with the token.
+       - If the session ID matches the cached voter's session ID, redirects to the voting route.
+       - If the session ID does not match, redirects to the login page with the token.
+
+    Returns:
+        - Redirect to the login page if the voter is not found or the session ID does not match.
+        - Redirect to the voting route if the session ID is valid.
+    """
     token = request.args.get("token")
     voter = AuthController.get_cached_voter(token)
     session_id = request.cookies.get("session_id")
@@ -47,45 +85,58 @@ def votes():
 
 @app.route("/vote", methods=["GET"])
 def vote_route():
+    """
+    Handles the voting route logic based on the request method.
+
+    GET:
+        - Routes the voter to the appropriate voting logic using the `VoteController`.
+        - The logic is processed with the `request` object and a `candidate_group` parameter.
+
+    POST or Other Methods:
+        - Redirects the user to the login page, preserving the `token` in the query parameters.
+
+    Returns:
+        - For GET requests: Returns the response from `VoteController.route_vote`.
+        - For other request methods: Redirects to the login page with the token.
+    """
     if request.method == "GET":
-        token = request.args.get("token")
-        session_id = request.cookies.get("session_id")
-        voter = AuthController.get_cached_voter(token)
-        if not voter:
-            return redirect(url_for("login", token=token))
-        
-        confirmationNumber = voter.get('voteConfirmationNumber')
-        if voter.get('session_id') == session_id and confirmationNumber == "NULL": 
-            return render_template("vote.html", voter=voter,
-                                candidate_group=candidate_group, token=token)
-        elif voter.get('session_id') == session_id and confirmationNumber != "NULL":
-            return redirect(url_for("report", token=token))
-        
-        return redirect(url_for("login", token=token))
+        route_voter = VoteController.route_vote(request, candidate_group)
+        return route_voter
     else:
-        return redirect(url_for("login", token=token))
+        return redirect(url_for("login", token=request.args.get("token")))
 
 
 @app.route("/report")
 def report():
-    token = request.args.get("token")
-    session_id = request.cookies.get("session_id")
-    voter = AuthController.get_cached_voter(token)
-    if not voter:
-            return redirect(url_for("login", token=token))
-        
-    confirmationNumber = voter.get('voteConfirmationNumber')
-    print(voter)
+    """
+    Handles the generation and retrieval of a voting report for the authenticated user.
+    Delegates the report generation and retrieval logic to the `ReportController.get_report` method.
     
-    if voter.get('session_id') == session_id and confirmationNumber != 'NULL':
-        vote_casted = db.get_voted_for(voter.get('id'))
-        return render_template("report.html", votes=vote_casted, voteConfirmationNumber=confirmationNumber, token=token )
-  
-    return redirect(url_for("login", token=token))
+    Returns:
+        - The response from `ReportController.get_report`
+    """
+    return ReportController.get_report(request)
 
 
 @app.route("/recordvote", methods=["POST"])
 def recordvote():
+    """
+    Handles the logic for recording a voter's vote.
+
+    Steps:
+    1. Retrieves the token from the query parameters.
+    2. Retrieves the session ID from the user's cookies.
+    3. Fetches the cached voter using the token.
+    4. Validates the voter and session:
+       - If the voter is not found, redirects to the login page with the token.
+       - If the session ID matches the cached voter's session ID and the vote has not been recorded,
+         records the vote and redirects to the report page.
+       - If validation fails, redirects to the login page with the token.
+
+    Returns:
+        - Redirect to the report page if the vote is successfully recorded.
+        - Redirect to the login page if validation fails.
+    """
     token = request.args.get("token")
     session_id = request.cookies.get("session_id")
     voter = AuthController.get_cached_voter(token)
@@ -94,78 +145,80 @@ def recordvote():
         return redirect(url_for("login", token=token))
         
     confirmationNumber = voter.get('voteConfirmationNumber')
-  
-    if voter.get('session_id') == session_id and confirmationNumber == "NULL":
-        voter_choice = request.form
-        voteConfirmationNumber = str(db.vote_count() + 20000)
-        for candidateId in voter_choice:
-            portId = db.get_portfolioId(candidateId=candidateId)
-            db.cast_vote(voter_id=voter.get('id'), candidate_id=candidateId, 
-                         portfolio_id=portId, 
-                         voteConfirmationNumber=voteConfirmationNumber)
-        return redirect(url_for("report", token=token))
     
+    if voter.get('session_id') == session_id and confirmationNumber == "NULL":
+        RecordVoteController.record_vote(request=request, voter=voter)
+        return redirect(url_for("report", token=token))
     return redirect(url_for("login", token=token))
+
 
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
+    """
+    Handles the logout functionality.
+
+    POST:
+        - Retrieves the token from the query parameters and the session ID from cookies.
+        - Fetches the cached voter using the token.
+        - Validates the voter and session:
+            - If the voter is not found, redirects to the login page with the token.
+            - If the session ID matches and the token is valid, logs the user out by flashing a success message
+              and redirects to the login page with the token.
+            - If validation fails, redirects to the login page with the token.
+
+    GET:
+        - Renders the login page with the token.
+
+    Returns:
+        - For POST requests: Redirects to the login page after validation.
+        - For GET requests: Renders the login page.
+    """
     if request.method == "POST":
         token = request.args.get("token")
         session_id = request.cookies.get("session_id")
         
         voter = AuthController.get_cached_voter(token)
         
-        if not voter:
-            return redirect(url_for("login", token=token))
-        
-        if voter.get('session_id') == session_id and voter.get('token') == token:  
-            flash('You have been logged out successfully.', 'success')
-            return redirect(url_for("login", token=token))
+        if voter:
+            AuthController.remove_cached_voter(token)         
         return redirect(url_for("login", token=token))
-    return render_template("login.html", token)
-   
     
+    return render_template("login.html", token)
+      
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """
+    Handles the registration process for new users.
+
+    POST:
+        - Processes the registration form data submitted via a POST request.
+        - Delegates the registration logic to the `RegisterController.register` method, 
+          which handles user creation and any necessary validations.
+
+    GET:
+        - Renders the registration page for users to fill out the registration form.
+    """
     if request.method == "POST":
-        first_name = request.form["first_name"]
-        last_name = request.form["last_name"]
-        email = request.form["email"]
-        contact = request.form["contact"]
-        passwd = generate_password_hash(request.form["password"])
-        
-        if (db.check_existance(contact=contact, email=email, type="Voter") == False):
-            new_voter = db.register_voter(first_name=first_name,
-                                          last_name=last_name,
-                                          email=email,
-                                          pwdhash=passwd,
-                                          contact=contact)           
-            flash('Succesfully Register! Go to login', 'success')
-            #send = Send(token=new_voter.token, first_name=new_voter.first_name)
-            #send.send_email(voter_email_address=new_voter.email)
-            #send.send_sms(contact=new_voter.contact)
-            return redirect(url_for('register'))
-        flash('Registration failed. User Already Exist!', 'info')
-        return redirect(url_for('register'))
+        return RegisterController.register(request)
     return render_template("register.html")
 
 
 @app.route("/statistics")
 def statistic():
-    token = request.args.get("token")
-    session_id = request.cookies.get("session_id")
-    candidate_data = db.get_vote_percentage_by_portfolio()
-    
-    voter = AuthController.get_cached_voter(token)
-    if not voter:
-            return redirect(url_for("login", token=token))
-    
-    if candidate_data and voter.get('session_id') == session_id and voter.get('token') == token:
-        return render_template("statistics.html", candidate_data=candidate_data, token=token)
-    return render_template("login.html", token=token)
-     
+    """
+    This function:
+    1. Fetches the vote percentages for candidates, grouped by their respective portfolios.
+    2. Passes the data to the StatsController for processing and statistical analysis.
+    3. Returns the processed statistics as a response.
 
+    Returns:
+        - The response from StatsController.get_stats
+          depending on the implementation and request type.
+    """
+    candidate_data = db.get_vote_percentage_by_portfolio()
+    return StatsController.get_stats(request, candidate_data)
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
