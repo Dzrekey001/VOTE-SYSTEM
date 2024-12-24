@@ -32,8 +32,8 @@ class RegisterController:
                                           pwdhash=passwd,
                                           contact=contact)           
             flash('Succesfully Register! Go to login', 'success')
-            #send = Send(token=new_voter.token, first_name=new_voter.first_name)
-            #send.send_email(voter_email_address=new_voter.email)
+            send = Send(token=new_voter.token, first_name=new_voter.first_name, host=request.host)
+            send.send_email(voter_email_address=new_voter.email)
             #send.send_sms(contact=new_voter.contact)
             return redirect(url_for('register'))
         flash('Registration failed. User Already Exist!', 'info')
