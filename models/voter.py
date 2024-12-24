@@ -18,8 +18,6 @@ class Voter(BaseModel, Base):
 
     def __init__(self, first_name,last_name, email, passwordhash, contact) -> None:
         super().__init__()
-        #implement a feature to check if generated token does not already exist
-        #token to be added to link
         self.token = str(shortuuid.uuid())
         self.__user_type = 0
         self.passwordhash = passwordhash
