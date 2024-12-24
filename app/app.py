@@ -1,4 +1,5 @@
 from flask import Flask,render_template, redirect, request, url_for, flash
+from functools import lru_cache
 from models import db
 from controller import AuthController
 from controller import VoteController
@@ -7,7 +8,12 @@ from controller import RegisterController
 from controller import StatsController
 from controller import ReportController
 
-candidate_group = db.get_candidates()
+
+@lru_cache(maxsize=1)
+def get_cached_candidates():
+    return db.get_candidates()
+
+candidate_group = get_cached_candidates()
 
 app = Flask(__name__)
 app.secret_key = "f8fd933c-af3b-4e77-b6b9-cdb5f2dd42d3"
