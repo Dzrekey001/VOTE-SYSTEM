@@ -36,6 +36,6 @@ class RedisSession():
             return False
 
     @classmethod
-    def cache_voter(cls, token, userData):
+    def cache_voter(cls, token, userData, ttl=3900):
         cls.client.hset(f'user<{token}>', mapping=userData)
-        cls.client.expire(f'user<{token}>', 900)
+        cls.client.expire(f'user<{token}>', ttl)
