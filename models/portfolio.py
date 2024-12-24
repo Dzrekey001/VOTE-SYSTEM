@@ -15,4 +15,4 @@ class Portfolio(BaseModel, Base):
     def __init__(self, portfolioName, portfolioId) -> None:
         super().__init__()
         self.portfolioName = portfolioName
-        self.portfolioId = portfolioId #DBStorage.generate_id("Portfolio")
+        self.portfolioId = portfolioId 

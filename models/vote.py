@@ -19,5 +19,3 @@ class Vote(BaseModel, Base):
         self.voter_Id = voterId
         self.portfolio_Id = portfolioId
         self.voteConfirmationNumber = voteConfirmationNumber
-        # electionID: this would specify the specific election
-        # self.electionId = self.election
