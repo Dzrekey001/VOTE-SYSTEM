@@ -10,10 +10,11 @@ class Send():
     admin_email = os.getenv("ADMIN_EMAIL")
     admin_email_passwd = os.getenv("ADMIN_PASSWORD")
 
-    def __init__(self, token, first_name) -> None:
+    def __init__(self, token, first_name, host) -> None:
         self.first_name=first_name
         self.token = token
-        self.message_content = f"""Hi {self.first_name},\nThanks for joining the MVP stage of our voting system! Test by clicking on your unique link:\nhttps://vote.dkdgroup.tech/login?token={token}"""
+        self.host = host
+        self.message_content = f"""Hi {self.first_name},\nThanks for joining the MVP stage of our voting system! Test by clicking on your unique link:\n{self.host}/login/?token={token}"""
     
     #send email messages
     def send_email(self, voter_email_address):
