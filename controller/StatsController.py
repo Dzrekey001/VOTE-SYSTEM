@@ -5,6 +5,18 @@ class StatsController:
     
     @classmethod
     def get_stats(cls, request, candidate_data):
+        """
+        Retrieves and displays voting statistics for the candidates.
+
+        Parameters:
+        - cls: The class containing this method, used to access class-level methods.
+        - request (Flask request object): The HTTP request object containing the token and session data.
+        - candidate_data (dict): A dictionary containing the vote statistics for each candidate.
+
+        Returns:
+        - Flask Response: A rendered HTML template displaying the voting statistics or a redirect
+        to the login page if the voter is not authenticated.
+        """
         token = request.args.get("token")
         session_id = request.cookies.get("session_id")
     
