@@ -7,6 +7,17 @@ class ReportController:
     
     @classmethod
     def get_report(cls, request):
+        """
+        Retrieves and displays the voter's report after voting.
+
+        Parameters:
+        - cls: The class containing this method, used to access class-level methods.
+        - request (Flask request object): The HTTP request object containing the token and session data.
+
+        Returns:
+        - Flask Response: A rendered HTML template displaying the voter's voting report or a redirect
+        to the login page if the voter is not authenticated or hasn't voted.
+        """
         token = request.args.get("token")
         session_id = request.cookies.get("session_id")
         voter = AuthController.get_cached_voter(token)
